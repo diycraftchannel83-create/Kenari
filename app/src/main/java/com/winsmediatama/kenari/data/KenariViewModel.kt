@@ -12,6 +12,7 @@ class KenariViewModel(application: Application) : AndroidViewModel(application) 
     private val db = Room.databaseBuilder(application, KenariDatabase::class.java, "kenari-tasik.db").build()
     private val repository = BirdRepository(db.birdDao())
     val birds = repository.birds.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+    init { viewModelScope.launch { repository.seedDemoIfEmpty() } }
 
     fun save(bird: BirdEntity, onResult: (Result<Long>) -> Unit) {
         viewModelScope.launch { onResult(repository.save(bird)) }
