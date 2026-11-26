@@ -143,7 +143,7 @@ private fun SummaryChip(label: String, count: String) {
 
 @Composable
 private fun QuickAction(label: String, icon: androidx.compose.ui.graphics.vector.ImageVector, modifier: Modifier = Modifier) {
-    Surface(modifier, color = Color.White, shape = RoundedCornerShape(18.dp), onClick = {}) {
+    Surface(onClick = {}, modifier = modifier, color = Color.White, shape = RoundedCornerShape(18.dp)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Icon(icon, contentDescription = label, tint = Forest, modifier = Modifier.size(28.dp))
             Text(label, fontWeight = FontWeight.SemiBold, color = Ink, fontSize = 13.sp)
