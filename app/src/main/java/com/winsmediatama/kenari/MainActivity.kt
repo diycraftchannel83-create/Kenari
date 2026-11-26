@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -124,11 +123,11 @@ private fun BirdList(birds: List<BirdEntity>, modifier: Modifier, edit: (BirdEnt
 @Composable
 private fun BirdForm(initial: BirdEntity?, birds: List<BirdEntity>, close: () -> Unit, save: (BirdEntity) -> Unit) {
     var ring by remember { mutableStateOf(initial?.ringId.orEmpty()) }; var name by remember { mutableStateOf(initial?.name.orEmpty()) }; var sex by remember { mutableStateOf(initial?.sex ?: "Belum diketahui") }; var hatch by remember { mutableStateOf(initial?.hatchDate?.let { fmt(it) }.orEmpty()) }; var breed by remember { mutableStateOf(initial?.breed.orEmpty()) }; var color by remember { mutableStateOf(initial?.colorMutation.orEmpty()) }; var origin by remember { mutableStateOf(initial?.origin.orEmpty()) }; var notes by remember { mutableStateOf(initial?.notes.orEmpty()) }; var photo by remember { mutableStateOf(initial?.photoUri) }; var father by remember { mutableStateOf(initial?.fatherId) }; var mother by remember { mutableStateOf(initial?.motherId) }; var error by remember { mutableStateOf<String?>(null) }
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { photo = it?.toString() }
+    val picker = rememberLauncherForActivityResult(ActivityResultContracts.GetContent()) { photo = it?.toString() }
     val options = birds.filter { it.id != initial?.id }
     AlertDialog(onDismissRequest = close, title = { Text(if(initial == null) "Tambah Kenari" else "Edit Kenari") }, text = {
         Column(Modifier.heightIn(max = 520.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) { if(photo != null) AsyncImage(photo, "Foto kenari", modifier = Modifier.size(70.dp)) else Icon(Icons.Default.Pets, null, tint = Forest, modifier = Modifier.size(60.dp)); Button(onClick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) { Text("Foto") }; TextButton(onClick = { photo = null }) { Text("Reset") } }
+            Row(verticalAlignment = Alignment.CenterVertically) { if(photo != null) AsyncImage(photo, "Foto kenari", modifier = Modifier.size(70.dp)) else Icon(Icons.Default.Pets, null, tint = Forest, modifier = Modifier.size(60.dp)); Button(onClick = { picker.launch("image/*") }) { Text("Foto") }; TextButton(onClick = { photo = null }) { Text("Reset") } }
             LazyColumn(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                 item { Field(ring, { ring = it }, "Nomor ring *") }; item { Field(name, { name = it }, "Nama") }; item { SexMenu(sex) { sex = it } }; item { Field(hatch, { hatch = it }, "Tanggal menetas yyyy-MM-dd") }; item { Field(breed, { breed = it }, "Jenis / varietas") }; item { Field(color, { color = it }, "Warna / mutasi") }; item { Field(origin, { origin = it }, "Asal breeder") }; item { ParentMenu("Indukan jantan", father, options.filter { it.sex != "Betina" }) { father = it } }; item { ParentMenu("Indukan betina", mother, options.filter { it.sex != "Jantan" }) { mother = it } }; item { OutlinedTextField(notes, { notes = it }, label = { Text("Catatan") }, minLines = 2, modifier = Modifier.fillMaxWidth()) }; if(error != null) item { Text(error!!, color = Color.Red) }
             }
