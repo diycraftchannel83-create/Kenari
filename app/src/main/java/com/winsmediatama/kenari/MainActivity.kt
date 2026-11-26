@@ -63,7 +63,7 @@ private fun KenariApp() {
             when(tab) {
                 0 -> Home(birds, Modifier.padding(p), { edit = null; form = true }, { tab = it })
                 1 -> BirdList(birds, Modifier.padding(p), { edit = it; form = true }, { delete = it })
-                2 -> BasicPage("Geneologi", "Profil kenari sekarang menyimpan relasi indukan. Visualisasi pohon silsilah multi-generasi akan ditambahkan pada tahap berikut.")
+                2 -> GenealogyPage(birds, Modifier.padding(p))
                 3 -> BasicPage("Breeding", "Berikutnya: pasangan, periode breeding, telur, inkubasi, dan data anakan.")
                 else -> BasicPage("Lainnya", "Katalog jenis • Laporan • Backup/Restore • Pengaturan")
             }
@@ -137,6 +137,41 @@ private fun BirdForm(initial: BirdEntity?, birds: List<BirdEntity>, close: () ->
 @Composable private fun Field(value: String, change: (String) -> Unit, label: String) { OutlinedTextField(value, change, label = { Text(label) }, singleLine = true, modifier = Modifier.fillMaxWidth()) }
 @Composable private fun SexMenu(value: String, set: (String) -> Unit) { var open by remember { mutableStateOf(false) }; Box { OutlinedButton(onClick = { open = true }, modifier = Modifier.fillMaxWidth()) { Text("Jenis kelamin: " + value); Spacer(Modifier.weight(1f)); Icon(Icons.Default.ArrowDropDown, null) }; DropdownMenu(open, { open = false }) { listOf("Jantan", "Betina", "Belum diketahui").forEach { DropdownMenuItem(text = { Text(it) }, onClick = { set(it); open = false }) } } } }
 @Composable private fun ParentMenu(label: String, id: Long?, list: List<BirdEntity>, set: (Long?) -> Unit) { var open by remember { mutableStateOf(false) }; val current = list.firstOrNull { it.id == id }; Box { OutlinedButton(onClick = { open = true }, modifier = Modifier.fillMaxWidth()) { Text(label + ": " + (current?.name?.ifBlank { current.ringId } ?: "Belum dipilih"), maxLines = 1); Spacer(Modifier.weight(1f)); Icon(Icons.Default.ArrowDropDown, null) }; DropdownMenu(open, { open = false }) { DropdownMenuItem(text = { Text("Kosong") }, onClick = { set(null); open = false }); list.forEach { b -> DropdownMenuItem(text = { Text(b.name.ifBlank { b.ringId } + " • " + b.ringId) }, onClick = { set(b.id); open = false }) } } } }
+@Composable private fun GenealogyPage(birds: List<BirdEntity>, modifier: Modifier = Modifier) {
+    val demoChild = birds.firstOrNull { it.ringId == "KTS-003" }
+    val father = birds.firstOrNull { it.id == demoChild?.fatherId } ?: birds.firstOrNull { it.sex == "Jantan" }
+    val mother = birds.firstOrNull { it.id == demoChild?.motherId } ?: birds.firstOrNull { it.sex == "Betina" }
+    Column(modifier.fillMaxSize().background(Ivory).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Text("Pohon Geneologi", color = Forest, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+        Text("Contoh hubungan indukan dan anakan. Data dapat diedit melalui menu Kenari.", color = Forest, fontSize = 13.sp)
+        Surface(color = Color.White, shape = RoundedCornerShape(20.dp), modifier = Modifier.fillMaxWidth()) {
+            Column(Modifier.padding(14.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Text("GENERASI INDUKAN", color = Forest, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    GenealogyBirdCard(father, "♂ Jantan", Modifier.weight(1f))
+                    GenealogyBirdCard(mother, "♀ Betina", Modifier.weight(1f))
+                }
+                Icon(Icons.Default.CallMade, "Hubungan indukan", tint = Gold, modifier = Modifier.size(28.dp))
+                Text("↓ Pasangan breeding ↓", color = Forest, fontWeight = FontWeight.SemiBold)
+                Text("GENERASI ANAKAN", color = Forest, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                GenealogyBirdCard(demoChild, "Anakan • KTS-003", Modifier.fillMaxWidth())
+            }
+        }
+        Text("Semua 3 data demo otomatis masuk CRUD dan dapat diedit atau dihapus. Geneologi memakai relasi fatherId/motherId.", color = Forest, fontSize = 12.sp)
+    }
+}
+@Composable private fun GenealogyBirdCard(bird: BirdEntity?, label: String, modifier: Modifier = Modifier) {
+    Surface(color = Ivory, shape = RoundedCornerShape(14.dp), modifier = modifier) {
+        Column(Modifier.padding(10.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            if (bird?.photoUri.isNullOrBlank()) Icon(Icons.Default.Pets, null, tint = Forest, modifier = Modifier.size(62.dp))
+            else AsyncImage(bird?.photoUri, label, modifier = Modifier.size(82.dp))
+            Text(label, color = Gold, fontWeight = FontWeight.Bold, fontSize = 11.sp)
+            Text(bird?.name ?: "Belum ada data", color = Ink, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+            Text(bird?.ringId ?: "-", color = Forest, fontSize = 11.sp)
+            Text(bird?.colorMutation ?: "", color = Forest, fontSize = 10.sp)
+        }
+    }
+}
 @Composable private fun BasicPage(title: String, description: String) { Column(Modifier.fillMaxSize().background(Ivory).padding(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { Text(title, color = Forest, fontSize = 24.sp, fontWeight = FontWeight.Bold); Text(description, color = Forest); Surface(color = Color.White, shape = RoundedCornerShape(16.dp)) { Text("Modul akan diintegrasikan bertahap.", Modifier.padding(16.dp), color = Ink) } } }
 private fun parse(s: String): Long? = if(s.isBlank()) null else runCatching { SimpleDateFormat("yyyy-MM-dd", Locale.US).apply { isLenient = false }.parse(s)?.time }.getOrNull()
 private fun fmt(t: Long) = SimpleDateFormat("yyyy-MM-dd", Locale.US).format(Date(t))
