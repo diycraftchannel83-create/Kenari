@@ -11,6 +11,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Python for launcher assets
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install launcher generator
+        run: python -m pip install Pillow
+      - name: Generate launcher PNG assets
+        run: python scripts/generate_launcher_icons.py
       - name: Setup JDK 17
         uses: actions/setup-java@v4
         with:
